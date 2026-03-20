@@ -11,7 +11,8 @@ describe("formatResponse", () => {
   });
 
   it("splits long text at paragraph boundaries", () => {
-    const longText = Array(30).fill("This is a paragraph.\n\n").join("");
+    // Each paragraph ~200 chars, 30 of them = ~6000 chars total, forces splitting at 1800
+    const longText = Array(30).fill("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.\n\n").join("");
     const result = formatResponse(longText);
     assert.ok(result.length > 1);
     assert.ok(result.every((r) => r.type === "file" || r.content.length <= 1800));

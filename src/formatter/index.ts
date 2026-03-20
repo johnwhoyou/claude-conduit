@@ -4,7 +4,7 @@ export interface FormattedChunk {
   filename?: string;
 }
 
-const MAX_LENGTH = 300;
+const MAX_LENGTH = 1800;
 const MAX_INLINE_CODE_LINES = 30;
 const DIFF_PATTERN = /^---\s+\S+\n\+\+\+\s+\S+\n@@/m;
 
