@@ -42,8 +42,10 @@ export class Handlers {
 
     const dirs = fs.readdirSync(projectRoot);
     const normalized = channelName.toLowerCase();
+    const normalizedNoHyphens = normalized.replace(/-/g, "");
     const match = dirs.find(
-      (d) => d.toLowerCase() === normalized || d.toLowerCase() === normalized.replace(/-/g, "")
+      (d) => d.toLowerCase() === normalized ||
+             d.toLowerCase().replace(/-/g, "") === normalizedNoHyphens
     );
 
     if (match) {
@@ -79,7 +81,7 @@ export class Handlers {
 
     if (existing) {
       this.manager.create(channel.id, channel.name, workDir, existing.sessionId);
-      await interaction.editReply("Session resumed in `" + workDir + "` (previous session restored).");
+      await interaction.editReply("Previous session found for `" + workDir + "`. It will resume on your next message.");
     } else {
       const result = await sendMessage({ prompt: "Confirm session started. Reply with only: Ready.", cwd: workDir });
       this.manager.create(channel.id, channel.name, workDir, result.sessionId);
@@ -192,6 +194,23 @@ export class Handlers {
       }
 
       if (result.isError) {
+        // Check if this is a stale session — retry without sessionId
+        if (session.sessionId && result.errorMessage) {
+          const freshResult = await sendMessage({ prompt: content, cwd: session.workingDirectory });
+          if (!freshResult.isError) {
+            session.sessionId = freshResult.sessionId;
+            this.store.save({
+              channelId: channel.id,
+              channelName: session.channelName,
+              sessionId: freshResult.sessionId,
+              workingDirectory: session.workingDirectory,
+              createdAt: new Date().toISOString(),
+            });
+            await channel.send("_Previous session expired, started fresh._");
+            await this.sendFormatted(channel, freshResult.text);
+            return;
+          }
+        }
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
           .setTitle("Error")

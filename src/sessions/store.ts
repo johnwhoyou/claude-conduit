@@ -18,8 +18,13 @@ export class SessionStore {
 
   private readAll(): SessionEntry[] {
     if (!fs.existsSync(this.filePath)) return [];
-    const raw = fs.readFileSync(this.filePath, "utf-8");
-    return JSON.parse(raw);
+    try {
+      const raw = fs.readFileSync(this.filePath, "utf-8");
+      return JSON.parse(raw);
+    } catch {
+      console.error("Warning: corrupted sessions.json, starting fresh");
+      return [];
+    }
   }
 
   private writeAll(entries: SessionEntry[]): void {

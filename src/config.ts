@@ -29,6 +29,10 @@ export function loadConfig(): Config {
     sessionWarnMs: parseInt(requireEnv("SESSION_WARN_MS"), 10),
   };
 
+  if (Number.isNaN(config.sessionTimeoutMs) || Number.isNaN(config.sessionWarnMs)) {
+    throw new Error("SESSION_TIMEOUT_MS and SESSION_WARN_MS must be valid numbers");
+  }
+
   if (config.sessionWarnMs >= config.sessionTimeoutMs) {
     throw new Error("SESSION_WARN_MS must be less than SESSION_TIMEOUT_MS");
   }
