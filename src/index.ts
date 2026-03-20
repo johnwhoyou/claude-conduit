@@ -4,7 +4,7 @@ import { createBot } from "./bot/client.js";
 
 async function main() {
   const config = loadConfig();
-  console.log("Claude Discord Bot starting...");
+  console.log("ClaudeConduit starting...");
   console.log("Project root: " + config.projectRoot);
 
   const client = await createBot(config);
