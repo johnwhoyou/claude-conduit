@@ -8,16 +8,26 @@ export interface ClaudeResponse {
   errorMessage?: string;
 }
 
+function extractTextFromContent(content: any[]): string {
+  return content
+    .filter((block: any) => block.type === "text" && block.text)
+    .map((block: any) => block.text)
+    .join("\n");
+}
+
 export async function sendMessage(opts: {
   prompt: string;
   cwd: string;
   sessionId?: string;
 }): Promise<ClaudeResponse> {
   let capturedSessionId = opts.sessionId ?? "";
-  let resultText = "";
   let costUsd = 0;
   let isError = false;
   let errorMessage: string | undefined;
+
+  // Collect all assistant text messages throughout the conversation
+  const assistantTexts: string[] = [];
+  let resultText = "";
 
   try {
     for await (const message of query({
@@ -31,6 +41,12 @@ export async function sendMessage(opts: {
     })) {
       if (message.type === "system" && message.subtype === "init") {
         capturedSessionId = message.session_id;
+      }
+
+      // Capture text from assistant messages (questions, progress, intermediate output)
+      if (message.type === "assistant" && message.message?.content) {
+        const text = extractTextFromContent(message.message.content);
+        if (text) assistantTexts.push(text);
       }
 
       if (message.type === "result") {
@@ -50,5 +66,17 @@ export async function sendMessage(opts: {
     errorMessage = err instanceof Error ? err.message : String(err);
   }
 
-  return { text: resultText, sessionId: capturedSessionId, costUsd, isError, errorMessage };
+  // Prefer the result text (concise summary), but if it's empty or very short
+  // compared to the full assistant output, use the full conversation instead.
+  // This handles cases where Claude asks questions or provides detailed intermediate output
+  // that doesn't make it into the result summary.
+  let finalText = resultText;
+  if (assistantTexts.length > 0) {
+    const fullText = assistantTexts.join("\n\n");
+    if (!resultText || (fullText.length > resultText.length * 2 && fullText.length > 200)) {
+      finalText = fullText;
+    }
+  }
+
+  return { text: finalText, sessionId: capturedSessionId, costUsd, isError, errorMessage };
 }
