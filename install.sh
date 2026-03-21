@@ -112,7 +112,7 @@ echo
 # -------------------------------------------------------------------
 echo "${BOLD}Starting configuration wizard...${RESET}"
 echo
-npx tsx src/setup.ts
+CLAUDE_CONDUIT_INSTALLER=1 npx tsx src/setup.ts
 
 # -------------------------------------------------------------------
 # Build

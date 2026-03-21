@@ -234,11 +234,21 @@ async function main() {
     writeEnvFile(envPath, values);
     console.log(`Configuration saved to ${envPath}`);
     console.log();
-    console.log("Next steps:");
-    console.log("  npm run dev       # Start in development mode");
-    console.log("  npm run build     # Build for production");
-    console.log("  npm start         # Run production build");
-    console.log();
+
+    // If run from install script, skip the start prompt (install.sh handles it)
+    if (process.env.CLAUDE_CONDUIT_INSTALLER) {
+      return;
+    }
+
+    const start = await rl.question("Start the bot now? [Y/n]: ");
+    if (start.trim().toLowerCase() !== "n") {
+      rl.close();
+      console.log();
+      console.log("Starting ClaudeConduit...");
+      console.log();
+      const { execSync } = await import("node:child_process");
+      execSync("npm run dev", { stdio: "inherit", cwd: process.cwd() });
+    }
   } finally {
     rl.close();
   }
