@@ -27,16 +27,28 @@ Using Claude Code remotely via SSH/Termius on a phone is painful. Discord's mobi
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - A Discord bot ([create one here](https://discord.com/developers/applications))
 
-### Setup
+### One-Line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/johnwhoyou/claude-conduit/main/install.sh | bash
+```
+
+This will check prerequisites, clone to `~/.claude-conduit`, walk you through configuration, build, and optionally set up pm2 for auto-start.
+
+### Manual Install
+
+<details>
+<summary>Click to expand manual setup steps</summary>
 
 ```bash
 git clone https://github.com/johnwhoyou/claude-conduit.git
 cd claude-conduit
 npm install
-cp .env.example .env
+npm run setup     # Interactive configuration wizard
+npm run dev       # Start in development mode
 ```
 
-Edit `.env` with your credentials:
+Or configure manually by copying `.env.example` to `.env` and editing it:
 
 ```env
 DISCORD_BOT_TOKEN=your-bot-token
@@ -47,7 +59,11 @@ SESSION_TIMEOUT_MS=3600000
 SESSION_WARN_MS=3000000
 ```
 
+</details>
+
 ### Discord Bot Setup
+
+Before running the installer, set up your Discord bot:
 
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application → go to **Bot** tab

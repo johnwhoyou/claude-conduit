@@ -39,9 +39,39 @@ export async function createBot(config: Config): Promise<Client> {
   };
 
   client.once(Events.ClientReady, async (readyClient) => {
-    console.log("Bot online as " + readyClient.user.tag);
+    console.log("[ok] Bot online as " + readyClient.user.tag);
+
+    // Verify bot is in the configured server
+    const guild = readyClient.guilds.cache.get(config.allowedServerId);
+    if (!guild) {
+      console.error(`[x] Bot is not in the configured server (ALLOWED_SERVER_ID: ${config.allowedServerId})`);
+      console.error("    Invite the bot using the OAuth2 URL from Discord Developer Portal.");
+      process.exit(1);
+    }
+    console.log(`[ok] Connected to server: ${guild.name}`);
+
+    // Check bot permissions
+    const me = guild.members.me;
+    if (me) {
+      const required = [
+        "ViewChannel",
+        "SendMessages",
+        "ReadMessageHistory",
+        "AttachFiles",
+        "EmbedLinks",
+        "AddReactions",
+        "UseApplicationCommands",
+      ] as const;
+      const missing = required.filter((p) => !me.permissions.has(p));
+      if (missing.length > 0) {
+        console.warn(`[!!] Bot is missing permissions: ${missing.join(", ")}`);
+      } else {
+        console.log("[ok] Bot has all required permissions");
+      }
+    }
+
     await registerCommands(config.discordBotToken, readyClient.user.id, config.allowedServerId);
-    console.log("Slash commands registered.");
+    console.log("[ok] Slash commands registered");
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
